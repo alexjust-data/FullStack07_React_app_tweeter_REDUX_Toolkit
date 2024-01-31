@@ -1,6 +1,6 @@
 import { createReducer } from '@reduxjs/toolkit';
 
-import { authLogin, authLogout, uiResetError } from './actions';
+import { authLogin, authLogout, tweetsList, uiResetError } from './actions';
 import {
   TWEETS_CREATED_SUCCESS,
   TWEETS_DETAIL_SUCCESS,
@@ -26,21 +26,36 @@ export const auth = createReducer(defaultState.auth, builder => {
     .addCase(authLogout.fulfilled, () => false);
 });
 
-export function tweets(state = defaultState.tweets, action) {
-  switch (action.type) {
-    case TWEETS_LOADED_SUCCESS:
-      return { areLoaded: true, data: action.payload };
+// export function tweets(state = defaultState.tweets, action) {
+//   switch (action.type) {
+//     case tweetsList.fulfilled.type:
+//       return { areLoaded: true, data: action.payload };
 
-    case TWEETS_DETAIL_SUCCESS:
-      return { areLoaded: false, data: [action.payload] };
+//     case TWEETS_DETAIL_SUCCESS:
+//       return { areLoaded: false, data: [action.payload] };
 
-    case TWEETS_CREATED_SUCCESS:
-      return { ...state, data: [action.payload, ...state.data] };
+//     case TWEETS_CREATED_SUCCESS:
+//       return { ...state, data: [action.payload, ...state.data] };
 
-    default:
-      return state;
-  }
-}
+//     default:
+//       return state;
+//   }
+// }
+
+export const tweets = createReducer(defaultState.tweets, builder => {
+  builder
+    .addCase(tweetsList.fulfilled, (state, action) => {
+      state.areLoaded = true;
+      state.data = action.payload;
+    })
+    .addCase(TWEETS_DETAIL_SUCCESS, (state, action) => {
+      state.areLoaded = false;
+      state.data = [action.payload];
+    })
+    .addCase(TWEETS_CREATED_SUCCESS, (state, action) => {
+      state.data.unshift(action.payload);
+    });
+});
 
 
 const isActionError = action => action.error;

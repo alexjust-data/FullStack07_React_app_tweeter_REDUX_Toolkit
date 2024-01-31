@@ -706,4 +706,81 @@ export const authLogout = createAsyncThunk(
 );
 ```
 
+**Tweets list with RTK**
 
+`actions.js`
+
+```js
+// ANTES
+// export function loadTweets() {
+//   return async function (dispatch, getState, { api: { tweets } }) {
+//     if (areTweetsLoaded(getState())) {
+//       return;
+//     }
+
+//     try {
+//       dispatch(tweetsLoadedRequest());
+//       const tweetsList = await tweets.getLatestTweets();
+//       dispatch(tweetsLoadedSuccess(tweetsList));
+//     } catch (error) {
+//       dispatch(tweetsLoadedFailure(error));
+//     }
+//   };
+// }
+
+// DESPUES
+export const tweetsList = createAsyncThunk( // he cambiado nombre
+  'tweets/list',
+  async (
+    _,                      // 1er parámetro : ninguno
+    {                       // 2do parámetro
+      extra: {
+        api: { tweets },
+      },
+      rejectWithValue,      // 3er parámetro
+    },
+  ) => {
+    try {
+      const tweetsList = await tweets.getLatestTweets();
+      return tweetsList;
+    } catch (error) {
+      rejectWithValue(error);
+    }
+  },
+  // 3er parametro condicion para decidir cuando se ejecuta
+  { condition: (_, { getState }) => !areTweetsLoaded(getState()) },
+);
+```
+
+```js
+// export function tweets(state = defaultState.tweets, action) {
+//   switch (action.type) {
+//     case tweetsList.fulfilled.type:
+//       return { areLoaded: true, data: action.payload };
+
+//     case TWEETS_DETAIL_SUCCESS:
+//       return { areLoaded: false, data: [action.payload] };
+
+//     case TWEETS_CREATED_SUCCESS:
+//       return { ...state, data: [action.payload, ...state.data] };
+
+//     default:
+//       return state;
+//   }
+// }
+
+export const tweets = createReducer(defaultState.tweets, builder => {
+  builder
+    .addCase(tweetsList.fulfilled, (state, action) => {
+      state.areLoaded = true;
+      state.data = action.payload;
+    })
+    .addCase(TWEETS_DETAIL_SUCCESS, (state, action) => {
+      state.areLoaded = false;
+      state.data = [action.payload];
+    })
+    .addCase(TWEETS_CREATED_SUCCESS, (state, action) => {
+      state.data.unshift(action.payload);
+    });
+});
+```

@@ -64,21 +64,26 @@ export const tweetsLoadedFailure = error => ({
   payload: error,
 });
 
-export function loadTweets() {
-  return async function (dispatch, getState, { api: { tweets } }) {
-    if (areTweetsLoaded(getState())) {
-      return;
-    }
-
+export const tweetsList = createAsyncThunk(
+  'tweets/list',
+  async (
+    _,
+    {
+      extra: {
+        api: { tweets },
+      },
+      rejectWithValue,
+    },
+  ) => {
     try {
-      dispatch(tweetsLoadedRequest());
       const tweetsList = await tweets.getLatestTweets();
-      dispatch(tweetsLoadedSuccess(tweetsList));
+      return tweetsList;
     } catch (error) {
-      dispatch(tweetsLoadedFailure(error));
+      rejectWithValue(error);
     }
-  };
-}
+  },
+  { condition: (_, { getState }) => !areTweetsLoaded(getState()) },
+);
 
 export const tweetsDetailRequest = () => ({
   type: TWEETS_DETAIL_REQUEST,

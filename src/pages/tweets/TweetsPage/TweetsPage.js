@@ -6,9 +6,9 @@ import Tweet from '../components/Tweet';
 
 import './TweetsPage.css';
 import { useDispatch, useSelector } from 'react-redux';
+import { tweetsList } from '../../../store/actions';
 import { getTweets } from '../../../store/selectors';
-import { loadTweets } from '../../../store/actions';
- 
+
 const EmptyList = () => (
   <div className="tweetsPage-empty">
     <p>Be the first one!</p>
@@ -21,7 +21,7 @@ function TweetsPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch( loadTweets());
+    dispatch(tweetsList());
   }, [dispatch]);
 
   return (
