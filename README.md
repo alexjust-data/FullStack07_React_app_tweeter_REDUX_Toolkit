@@ -55,12 +55,9 @@ webpack compiled successfully
 ---
 
 > [!NOTE]
->  Estos apuntes parten de mi repo :
+> A partir de ahora es una continuacion de mis apuntes que parten del repo :
+> https://github.com/alexjust-data/FullStack07_React_app_tweeter_REDUX.git 
 
-
-```sh
-git clone -b redux https://github.com/alexjust-data/FullStack07_React_app_tweeter_REDUX_Toolkit.git
-```
 
 # Redux toolkits (React Redux app)
 > [!WARNING]  
@@ -203,6 +200,46 @@ export default function configureStore(preloadedState, { router }) {
 }
 ```
 
+comprueba que toda vaya bien
 
+
+```sh
+npm start
+```
+
+los estados están funcionando y estamos guardando el history, entonces funciona el `enhancers` para el `historyEnhancer`
+
+![](public/img/1.png)
+
+```js
+    enhancers: getDefaultEnhancers =>
+      getDefaultEnhancers().concat(historyEnhancer),
+```
+
+Las acciones tienen el meta con el timestamp, luego su middelware está funcionando
+
+![](public/img/2.png)
+
+```sh
+export default function configureStore(preloadedState, { router }) {
+  const extraMiddleware = [
+    timestamp,
+```
+
+En consola vemos como están los console, entonces `logger` está funcionando
+
+![](public/img/3.png)
+
+```sh
+export default function configureStore(preloadedState, { router }) {
+  const extraMiddleware = [
+    timestamp,
+    failureRedirects(router, { 401: '/login', 404: '/404' }),
+    successRedirects(router),
+    logger,
+  ];
+```
+
+Pues con esto ya tenemos todo lo que teníamos habiendo quitado todas las dependencias. No necesitamos ni las devTools otras cosas, pero tenemos que configurar el middelware. Y aún así tenemos acceso a todo igual que si hiciéramos a mano como anteriormente.
 
 
