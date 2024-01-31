@@ -1,14 +1,10 @@
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import { withExtraArgument } from 'redux-thunk';
-import { composeWithDevTools } from '@redux-devtools/extension';
+import { configureStore as rtkConfigureStore } from '@reduxjs/toolkit';
 
 import * as reducers from './reducers';
 import * as actionCreators from './actions';
 
 import * as tweets from '../pages/tweets/service';
 import * as auth from '../pages/auth/service';
-
-const composeEnhancers = composeWithDevTools({ actionCreators });
 
 // const thunk = extraArgument => store => next => action => {
 //   if (typeof action === 'function') {
@@ -53,8 +49,8 @@ const failureRedirects = (router, redirectsMap) => store => next => action => {
   return result;
 };
 
-const historyReducer = reducer => {
-  return function (state, action) {
+const historyEnhancer = createStore => (reducer, preloadedState, enhancer) => {
+  function historyReducer(state, action) {
     const { history, ...restState } = state;
 
     if (action.type === 'history/back') {
@@ -75,25 +71,31 @@ const historyReducer = reducer => {
         current: newState,
       },
     };
-  };
+  }
+
+  return createStore(historyReducer, preloadedState, enhancer);
 };
 
-const rootReducer = historyReducer(combineReducers(reducers));
-
 export default function configureStore(preloadedState, { router }) {
-  const middleware = [
-    withExtraArgument({ api: { auth, tweets }, router }),
+  const extraMiddleware = [
     timestamp,
     failureRedirects(router, { 401: '/login', 404: '/404' }),
     logger,
-    noAction,
+    // noAction,
   ];
-  const store = createStore(
-    rootReducer,
+  const store = rtkConfigureStore({
+    reducer: reducers,
     preloadedState,
-    composeEnhancers(applyMiddleware(...middleware)),
-    // window.__REDUX_DEVTOOLS_EXTENSION__ &&
-    //   window.__REDUX_DEVTOOLS_EXTENSION__(),
-  );
+    middleware: getDefaultMiddleware =>
+      getDefaultMiddleware({
+        thunk: { extraArgument: { api: { auth, tweets }, router } },
+        serializableCheck: false,
+      }).concat(extraMiddleware),
+    devTools: {
+      actionCreators,
+    },
+    enhancers: getDefaultEnhancers =>
+      getDefaultEnhancers().concat(historyEnhancer),
+  });
   return store;
 }
