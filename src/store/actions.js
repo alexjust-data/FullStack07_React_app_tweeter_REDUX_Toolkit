@@ -1,10 +1,9 @@
-import { createAction } from '@reduxjs/toolkit';
+import { createAction, createAsyncThunk } from '@reduxjs/toolkit';
 
 import { areTweetsLoaded, getTweet } from './selectors';
 import {
   AUTH_LOGIN_REQUEST,
   AUTH_LOGIN_SUCCESS,
-  AUTH_LOGOUT,
   TWEETS_CREATED_REQUEST,
   TWEETS_CREATED_SUCCESS,
   TWEETS_CREATED_FAILURE,
@@ -16,36 +15,39 @@ import {
   TWEETS_LOADED_SUCCESS,
 } from './types';
 
-export const authLoginRequest = () => ({
-  type: AUTH_LOGIN_REQUEST,
-});
 
-export const authLoginSuccess = () => ({
-  type: AUTH_LOGIN_SUCCESS,
-});
+export const authLogin = createAsyncThunk(
+  'auth/login',
+  (
+    credentials,
+    {
+      extra: {
+        api: { auth },
+        router,
+      },
+      rejectWithValue,
+    },
+  ) =>
+    auth
+      .login(credentials)
+      .then(() => {
+        const to = router.state.location.state?.from?.pathname || '/';
+        router.navigate(to);
+      })
+      .catch(rejectWithValue),
+);
 
-export const authLoginFailure = createAction('auth/login/failure', error => ({
-  error: true,
-  payload: error,
-}));
-
-export function authLogin(credentials) {
-  return async function (dispatch, getState, { api: { auth }, router }) {
-    try {
-      dispatch(authLoginRequest());
-      await auth.login(credentials);
-      dispatch(authLoginSuccess());
-      const to = router.state.location.state?.from?.pathname || '/';
-      router.navigate(to);
-    } catch (error) {
-      dispatch(authLoginFailure(error));
-    }
-  };
-}
-
-export const authLogout = () => ({
-  type: AUTH_LOGOUT,
-});
+export const authLogout = createAsyncThunk(
+  'auth/logout',
+  (
+    _,
+    {
+      extra: {
+        api: { auth },
+      },
+    },
+  ) => auth.logout(),
+);
 
 export const tweetsLoadedRequest = () => ({
   type: TWEETS_LOADED_REQUEST,

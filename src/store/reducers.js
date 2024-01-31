@@ -1,6 +1,6 @@
 import { createReducer } from '@reduxjs/toolkit';
 
-import { authLoginSuccess, authLogout, uiResetError } from './actions';
+import { authLogin, authLogout, uiResetError } from './actions';
 import {
   TWEETS_CREATED_SUCCESS,
   TWEETS_DETAIL_SUCCESS,
@@ -19,21 +19,11 @@ export const defaultState = {
   },
 };
 
-// export function auth(state = defaultState.auth, action) {
-//   switch (action.type) {
-//     case AUTH_LOGIN_SUCCESS:
-//       return true;
-//     case AUTH_LOGOUT:
-//       return false;
-//     default:
-//       return state;
-//   }
-// }
 
 export const auth = createReducer(defaultState.auth, builder => {
   builder
-    .addCase(authLoginSuccess, () => true)
-    .addCase(authLogout, () => false);
+    .addCase(authLogin.fulfilled, () => true)
+    .addCase(authLogout.fulfilled, () => false);
 });
 
 export function tweets(state = defaultState.tweets, action) {
@@ -52,29 +42,10 @@ export function tweets(state = defaultState.tweets, action) {
   }
 }
 
-// export function ui(state = defaultState.ui, action) {
-//   if (action.error) {
-//     return { isFetching: false, error: action.payload };
-//   }
-
-//   if (action.type.endsWith('/request')) {
-//     return { isFetching: true, error: null };
-//   }
-
-//   if (action.type.endsWith('/success')) {
-//     return { isFetching: false, error: null };
-//   }
-
-//   if (action.type === uiResetError.type) {
-//     return { ...state, error: null };
-//   }
-
-//   return state;
-// }
 
 const isActionError = action => action.error;
-const isRequestAction = action => action.type.endsWith('/request');
-const isSuccessAction = action => action.type.endsWith('/success');
+const isRequestAction = action => action.type.endsWith('/pending');
+const isSuccessAction = action => action.type.endsWith('/fulfilled');
 
 export const ui = createReducer(defaultState.ui, builder => {
   builder

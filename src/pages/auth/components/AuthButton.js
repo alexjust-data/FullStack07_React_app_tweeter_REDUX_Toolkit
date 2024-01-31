@@ -1,7 +1,6 @@
 import { connect, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import Button from '../../../components/shared/Button';
-import { logout } from '../service';
 import { authLogout } from '../../../store/actions';
 import { getIsLogged } from '../../../store/selectors';
 
@@ -12,10 +11,10 @@ function AuthButton({ className, onLogout, isLogged }) {
   //   dispatch(authLogout());
   // };
 
-  const handleLogoutClick = async () => {
-    await logout();
+  const handleLogoutClick = () => {
     onLogout();
   };
+
   return isLogged ? (
     <Button onClick={handleLogoutClick} className={className}>
       Logout
