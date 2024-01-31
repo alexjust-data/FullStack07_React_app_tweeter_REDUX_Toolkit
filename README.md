@@ -462,7 +462,27 @@ Sigamos con `ui`
 `reducer`
 
 ```js
+// export function ui(state = defaultState.ui, action) {
+//   if (action.error) {
+//     return { isFetching: false, error: action.payload };
+//   }
 
+//   if (action.type.endsWith('/request')) {
+//     return { isFetching: true, error: null };
+//   }
+
+//   if (action.type.endsWith('/success')) {
+//     return { isFetching: false, error: null };
+//   }
+
+//   if (action.type === uiResetError.type) {
+//     return { ...state, error: null };
+//   }
+
+//   return state;
+// }
+
+// DESPUES
 const isActionError = action => action.error; // verifica si una acción tiene un error.
 const isRequestAction = action => action.type.endsWith('/request'); // verifica si el tipo de una acción termina en '/request'.
 const isSuccessAction = action => action.type.endsWith('/success'); // si el tipo de una acción termina en '/success'.
@@ -494,6 +514,196 @@ export const ui = createReducer(defaultState.ui, builder => {
     });
 });
 
-
 ```
+
+**Manejando lo Thunk con ReduxToolKit**
+
+Tiene este utilidad `create `
+
+`actions`
+
+```js
+// import { createAction } from '@reduxjs/toolkit';
+import { createAction, createAsyncThunk } from '@reduxjs/toolkit';
+
+import { areTweetsLoaded, getTweet } from './selectors';
+import {
+  AUTH_LOGIN_REQUEST,
+  AUTH_LOGIN_SUCCESS,
+  AUTH_LOGOUT,
+  TWEETS_CREATED_REQUEST,
+  TWEETS_CREATED_SUCCESS,
+  TWEETS_CREATED_FAILURE,
+  TWEETS_DETAIL_FAILURE,
+  TWEETS_DETAIL_REQUEST,
+  TWEETS_DETAIL_SUCCESS,
+  TWEETS_LOADED_FAILURE,
+  TWEETS_LOADED_REQUEST,
+  TWEETS_LOADED_SUCCESS,
+} from './types';
+
+export const authLoginRequest = () => ({
+  type: AUTH_LOGIN_REQUEST,
+});
+
+export const authLoginSuccess = () => ({
+  type: AUTH_LOGIN_SUCCESS,
+});
+
+export const authLoginFailure = createAction('auth/login/failure', error => ({
+  error: true,
+  payload: error,
+}));
+
+// export function authLogin(credentials) {
+//   return async function (dispatch, getState, { api: { auth }, router }) {
+//     try {
+//       dispatch(authLoginRequest());
+//       await auth.login(credentials);
+//       dispatch(authLoginSuccess());
+//       const to = router.state.location.state?.from?.pathname || '/';
+//       router.navigate(to);
+//     } catch (error) {
+//       dispatch(authLoginFailure(error));
+//     }
+//   };
+// }
+
+export const authLogin = createAsyncThunk(
+  'auth/login',                    // Identificador único para la acción asíncrona, usado en los reducers.
+  (
+    credentials,                   // Argumento para la función, en este caso, las credenciales del usuario.
+    {
+      extra: {                     // Desestructuración del campo 'extra' del segundo argumento.
+        api: { auth },             // Extrae 'auth' del objeto 'api' en el campo 'extra'.
+        router,                    // Extrae 'router' del campo 'extra'.
+      },
+      rejectWithValue,             // Función para devolver un valor rechazado personalizado.
+    },
+  ) =>
+    auth
+      .login(credentials)          // Llama a la función de login en 'auth' con 'credentials'.
+      .then(() => {                // Maneja la respuesta exitosa.
+        const to = router.state.location.state?.from?.pathname || '/';
+                                    // Determina la ruta a la que navegar después del login.
+        router.navigate(to);        // Navega a la ruta especificada.
+      })
+      .catch(rejectWithValue),      // En caso de error, pasa el error a 'rejectWithValue'.
+);
+```
+
+Ya con esto, lo importante es que estas 3 acciones ya no me hacen falta
+
+```js
+export const authLoginRequest = () => ({
+  type: AUTH_LOGIN_REQUEST,
+});
+
+export const authLoginSuccess = () => ({
+  type: AUTH_LOGIN_SUCCESS,
+});
+
+export const authLoginFailure = createAction('auth/login/failure', error => ({
+  error: true,
+  payload: error,
+}));
+```
+
+quedando el codigo así
+
+```js
+import { createAction, createAsyncThunk } from '@reduxjs/toolkit';
+
+import { areTweetsLoaded, getTweet } from './selectors';
+import {
+  TWEETS_CREATED_REQUEST,
+  TWEETS_CREATED_SUCCESS,
+  TWEETS_CREATED_FAILURE,
+  TWEETS_DETAIL_FAILURE,
+  TWEETS_DETAIL_REQUEST,
+  TWEETS_DETAIL_SUCCESS,
+  TWEETS_LOADED_FAILURE,
+  TWEETS_LOADED_REQUEST,
+  TWEETS_LOADED_SUCCESS,
+} from './types';
+
+export const authLogin = createAsyncThunk(
+  'auth/login',
+  (
+    credentials,
+    {
+      extra: {
+        api: { auth },
+        router,
+      },
+      rejectWithValue,
+    },
+  ) =>
+    auth
+      .login(credentials)
+      .then(() => {
+        const to = router.state.location.state?.from?.pathname || '/';
+        router.navigate(to);
+      })
+      .catch(rejectWithValue),
+);
+```
+
+Ahora en `reducers` 
+
+```js
+// ANTES
+export const auth = createReducer(defaultState.auth, builder => {
+  builder
+    .addCase(authLoginSuccess, () => true)
+    .addCase(authLogout, () => false);
+});
+
+const isActionError = action => action.error;
+const isRequestAction = action => action.type.endsWith('/request');
+const isSuccessAction = action => action.type.endsWith('/success');
+
+// DESPUES
+export const auth = createReducer(defaultState.auth, builder => {
+  builder
+    .addCase(authLogin.fulfilled, () => true)
+    .addCase(authLogout.fulfilled, () => false);
+});
+
+const isActionError = action => action.error;
+const isRequestAction = action => action.type.endsWith('/pending');
+const isSuccessAction = action => action.type.endsWith('/fulfilled');
+```
+
+`pages/auth/AuthButton.js`
+
+```js
+// import { logout } from '../service';
+
+// ANTES
+function AuthButton({ className, onLogout, isLogged }) {
+  const handleLogoutClick = async () => {
+    await logout();
+    onLogout();
+  };
+
+// DESPUES
+function AuthButton({ className, onLogout, isLogged }) {
+  const handleLogoutClick = () => {
+    onLogout();
+  };
+```
+
+`actions.js`
+
+```js
+// ANTES
+export const authLogout = createAction('auth/logout');
+
+// DESPUES
+export const authLogout = createAsyncThunk(
+  'auth/logout', (_, {extra: {api: { auth },},},) => auth.logout(),
+);
+```
+
 
