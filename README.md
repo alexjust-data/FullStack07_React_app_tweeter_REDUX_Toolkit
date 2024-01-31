@@ -18,6 +18,8 @@ Partimos de las clases del repositorio de fundamentos React, de la rama creada `
 
 ```sh
 git clone -b rtk https://github.com/KeepCodingWeb15/twitter-react.git
+cd twitter-react 
+  twitter-react git:(rtk) 
 ```
 
 Arranco Sparrest
@@ -156,25 +158,7 @@ export default function configureStore(preloadedState, { router }) {
   return store;
 }
 
-// DESPUES con middelware que nos hacemos cargo nosotros v1
-export default function configureStore(preloadedState, { router }) {
-  const extraMiddleware = [
-    timestamp,
-    failureRedirects(router, { 401: '/login', 404: '/404' }),
-    successRedirects(router),
-    logger,
-  ];
-  const store = rtkConfigureStore({
-    reducer: reducers,
-    preloadedState,
-    devTools: { // si no pasamos nada en middelware
-      actionCreators
-    }
-    middleware:()=>
-  });
-  return store;
-}
-// DESPUES con middelware que nos hacemos cargo nosotros v2
+// DESPUES con middelware que nos hacemos cargo nosotros
 export default function configureStore(preloadedState, { router }) {
   const extraMiddleware = [
     timestamp,
@@ -242,4 +226,8 @@ export default function configureStore(preloadedState, { router }) {
 
 Pues con esto ya tenemos todo lo que teníamos habiendo quitado todas las dependencias. No necesitamos ni las devTools otras cosas, pero tenemos que configurar el middelware. Y aún así tenemos acceso a todo igual que si hiciéramos a mano como anteriormente.
 
+## Trabajando el fichero de acciones
 
+`store/actions.js`
+
+utilidad `creacteactions` para crear 

@@ -1,10 +1,10 @@
+import { uiResetError } from './actions';
 import {
   AUTH_LOGIN_SUCCESS,
   AUTH_LOGOUT,
   TWEETS_CREATED_SUCCESS,
   TWEETS_DETAIL_SUCCESS,
   TWEETS_LOADED_SUCCESS,
-  UI_RESET_ERROR,
 } from './types';
 
 export const defaultState = {
@@ -84,7 +84,7 @@ export function ui(state = defaultState.ui, action) {
     return { isFetching: false, error: null };
   }
 
-  if (action.type === UI_RESET_ERROR) {
+  if (action.type === uiResetError.type) {
     return { ...state, error: null };
   }
 

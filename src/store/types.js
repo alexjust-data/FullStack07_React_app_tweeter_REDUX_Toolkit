@@ -17,4 +17,3 @@ export const TWEETS_DETAIL_FAILURE = 'tweets/detail/failure';
 export const TWEETS_CREATED_REQUEST = 'tweets/created/request';
 export const TWEETS_CREATED_SUCCESS = 'tweets/created/success';
 export const TWEETS_CREATED_FAILURE = 'tweets/created/failure';
-
